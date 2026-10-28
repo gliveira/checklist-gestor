@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Status das Implantações Eduq</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@500&display=swap">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="eyebrow">Implantação e treinamento · atualizado em <span id="atualizado"></span></div>
+      <h1>Status das implantações por cliente</h1>
+      <p>Situação de cada cliente nos itens financeiros (conta ASAAS, plano de contas, emissão de nota) e acadêmicos (matriz, turmas, EAD), com as pendências que faltam para concluir.</p>
+    </header>
+
+    <div class="stats" id="stats"></div>
+
+    <section>
+      <div class="sec-head">
+        <h2>Matriz de acompanhamento</h2>
+        <div class="actions">
+          <span class="status" id="status" role="status"></span>
+          <button type="button" id="btn-csv">Exportar CSV</button>
+          <button type="button" id="btn-restaurar">Restaurar original</button>
+          <button type="button" class="primary" id="btn-editar">Editar dados</button>
+          <button type="button" id="btn-add" hidden>Adicionar cliente</button>
+          <button type="button" id="btn-cancelar" hidden>Cancelar</button>
+          <button type="button" class="primary" id="btn-salvar" hidden>Salvar alterações</button>
+        </div>
+      </div>
+      <div class="legend">
+        <span><span class="chip c-ok">OK</span> concluído</span>
+        <span><span class="chip c-pend">—</span> pendente</span>
+        <span><span class="chip c-nu">NU</span> não utiliza</span>
+        <span><span class="chip c-nd">ND</span> não definido</span>
+        <span><span class="etapa">T</span> treinamento · <span class="etapa">A</span> acompanhamento · <span class="etapa">F</span> finalizado · <span class="etapa">P</span> a iniciar</span>
+      </div>
+      <div class="scroll">
+        <table>
+          <thead>
+            <tr class="group"><th></th><th></th><th></th><th colspan="4" class="sep">Financeiro</th><th colspan="3" class="sep">Acadêmico</th><th colspan="2" class="sep"></th></tr>
+            <tr><th>Etapa</th><th class="cli">Cliente</th><th>Tipo</th>
+              <th class="sep">Conta ASAAS</th><th>Liberações ASAAS</th><th>Plano de contas</th><th>Emissão nota</th>
+              <th class="sep">Matriz</th><th>Turmas</th><th>EAD</th>
+              <th class="sep">Finalização</th><th class="prog-col" id="col-prog">Progresso</th></tr>
+          </thead>
+          <tbody id="linhas"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <h2>Pendências por cliente</h2>
+      <div class="pend-list" id="pendencias"></div>
+    </section>
+
+    <p class="note">Fonte: planilha Clientes Yuri.xlsx. O progresso considera apenas os itens aplicáveis (NU e ND ficam fora da conta). As edições ficam salvas neste navegador.</p>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
