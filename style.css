@@ -8,6 +8,7 @@
   --destaque-suave: #e8effd;
   --ok: #16a34a;
   --sombra: 0 1px 3px rgba(16, 24, 40, 0.08);
+  --sn-largura: 860px;
 }
 
 @media (prefers-color-scheme: dark) {
