@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Checklist do Gestor</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topo">
+    <div>
+      <h1>Checklist do Gestor de Suporte</h1>
+      <p class="subtitulo" id="data-hoje"></p>
+    </div>
+    <div class="acoes">
+      <button type="button" id="btn-imprimir" class="btn">Imprimir</button>
+      <button type="button" id="btn-limpar" class="btn btn-secundario">Limpar tudo</button>
+    </div>
+  </header>
+
+  <nav class="abas" id="abas" role="tablist"></nav>
+
+  <main id="conteudo"></main>
+
+  <footer class="rodape">
+    Os itens diários, semanais e mensais são desmarcados sozinhos quando começa um novo dia, semana ou mês.
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
