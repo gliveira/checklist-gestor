@@ -11,7 +11,7 @@
 <body>
   <div class="wrap">
     <header>
-      <div class="eyebrow">Implantação e treinamento · atualizado em <span id="atualizado"></span></div>
+      <div class="eyebrow">Implantação e treinamento · dados de <span id="atualizado">—</span></div>
       <h1>Status das implantações por cliente</h1>
       <p>Situação de cada cliente nos itens financeiros (conta ASAAS, plano de contas, emissão de nota) e acadêmicos (matriz, turmas, EAD), com as pendências que faltam para concluir.</p>
     </header>
@@ -23,12 +23,8 @@
         <h2>Matriz de acompanhamento</h2>
         <div class="actions">
           <span class="status" id="status" role="status"></span>
-          <button type="button" id="btn-csv">Exportar CSV</button>
-          <button type="button" id="btn-restaurar">Restaurar original</button>
-          <button type="button" class="primary" id="btn-editar">Editar dados</button>
-          <button type="button" id="btn-add" hidden>Adicionar cliente</button>
-          <button type="button" id="btn-cancelar" hidden>Cancelar</button>
-          <button type="button" class="primary" id="btn-salvar" hidden>Salvar alterações</button>
+          <a class="btn" id="link-planilha" target="_blank" rel="noopener">Editar na planilha</a>
+          <button type="button" class="primary" id="btn-atualizar">Atualizar</button>
         </div>
       </div>
       <div class="legend">
@@ -45,7 +41,7 @@
             <tr><th>Etapa</th><th class="cli">Cliente</th><th>Tipo</th>
               <th class="sep">Conta ASAAS</th><th>Liberações ASAAS</th><th>Plano de contas</th><th>Emissão nota</th>
               <th class="sep">Matriz</th><th>Turmas</th><th>EAD</th>
-              <th class="sep">Finalização</th><th class="prog-col" id="col-prog">Progresso</th></tr>
+              <th class="sep">Finalização</th><th class="prog-col">Progresso</th></tr>
           </thead>
           <tbody id="linhas"></tbody>
         </table>
@@ -57,7 +53,7 @@
       <div class="pend-list" id="pendencias"></div>
     </section>
 
-    <p class="note">Fonte: planilha Clientes Yuri.xlsx. O progresso considera apenas os itens aplicáveis (NU e ND ficam fora da conta). As edições ficam salvas neste navegador.</p>
+    <p class="note">Fonte: planilha Clientes Yuri, no Google Drive, lida a cada abertura da página. Para alterar os dados, edite a planilha e clique em Atualizar. O progresso considera apenas os itens aplicáveis (NU e ND ficam fora da conta).</p>
   </div>
 
   <script src="app.js"></script>

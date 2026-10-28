@@ -1,65 +1,65 @@
 (function () {
-  const CHAVE = "status-implantacoes-eduq-v2";
-  const ITENS = ["Conta ASAAS", "Liberações ASAAS", "Plano de contas", "Emissão nota", "Matriz", "Turmas", "EAD"];
-  const ETAPAS = { T: "Treinamento", A: "Acompanhamento", F: "Finalizado", P: "A iniciar" };
-  const TIPOS = ["IMP", "TREIN"];
-  const VALORES = [["OK", "OK"], ["", "Pendente"], ["NU", "NU"], ["ND", "ND"]];
-  const MESES = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
-  const MES_NOME = { Jan: "Janeiro", Fev: "Fevereiro", Mar: "Março", Abr: "Abril", Mai: "Maio", Jun: "Junho",
-    Jul: "Julho", Ago: "Agosto", Set: "Setembro", Out: "Outubro", Nov: "Novembro", Dez: "Dezembro" };
+  // Os dados vêm da planilha do Google (compartilhada como "qualquer pessoa com o link").
+  const PLANILHA_ID = "1WQSTiDi-i93JcPGNNVFsY5lxHDTRycua";
+  const URL_CSV = `https://docs.google.com/spreadsheets/d/${PLANILHA_ID}/gviz/tq?tqx=out:csv`;
+  const URL_PLANILHA = `https://docs.google.com/spreadsheets/d/${PLANILHA_ID}/edit`;
+  const CHAVE_CACHE = "status-implantacoes-eduq-cache";
 
-  // Dados da planilha "Clientes Yuri.xlsx". Valores dos itens: OK, NU, ND ou "" (pendente).
-  const ORIGINAL = {
-    atualizadoEm: "2026-10-28",
-    clientes: [
-      { etapa: "T", cliente: "ATUALIZA",     itens: ["OK", "", "", "", "OK", "OK", ""],           mes: "",    tipo: "IMP" },
-      { etapa: "A", cliente: "ACQUA FIRE",   itens: ["OK", "OK", "OK", "NU", "OK", "OK", "OK"],   mes: "",    tipo: "IMP" },
-      { etapa: "F", cliente: "INAER",        itens: ["OK", "OK", "OK", "OK", "OK", "OK", "OK"],   mes: "Out", tipo: "IMP" },
-      { etapa: "A", cliente: "ANDREA LINS",  itens: ["OK", "OK", "OK", "OK", "OK", "OK", "OK"],   mes: "",    tipo: "IMP" },
-      { etapa: "",  cliente: "UNIBARAO",     itens: ["OK", "OK", "OK", "OK", "OK", "OK", "OK"],   mes: "",    tipo: "IMP" },
-      { etapa: "A", cliente: "SONDOTECNICA", itens: ["NU", "NU", "NU", "NU", "NU", "NU", "OK"],   mes: "",    tipo: "IMP" },
-      { etapa: "T", cliente: "REVOLUTION",   itens: ["OK", "OK", "OK", "", "OK", "OK", "OK"],     mes: "",    tipo: "IMP" },
-      { etapa: "T", cliente: "NORD",         itens: ["OK", "OK", "OK", "", "OK", "OK", "OK"],     mes: "",    tipo: "IMP" },
-      { etapa: "T", cliente: "KNT",          itens: ["", "", "OK", "", "", "", ""],               mes: "",    tipo: "IMP" },
-      { etapa: "F", cliente: "INCAF",        itens: ["ND", "ND", "ND", "ND", "OK", "OK", "OK"],   mes: "Out", tipo: "TREIN" },
-      { etapa: "T", cliente: "HABILIS",      itens: ["OK", "OK", "OK", "", "OK", "OK", "OK"],     mes: "",    tipo: "IMP" },
-      { etapa: "P", cliente: "CDCS",         itens: ["", "", "", "", "", "", ""],                 mes: "",    tipo: "TREIN" },
-    ],
-  };
+  const ITENS = ["Conta ASAAS", "Liberações ASAAS", "Plano de contas", "Emissão nota", "Matriz", "Turmas", "EAD"];
+  // Posição de cada coluna na planilha: A=Etapa, B=Cliente, C–F financeiro, G vazia, H–J acadêmico, K=Mês, L=Tipo.
+  const COL = { etapa: 0, cliente: 1, itens: [2, 3, 4, 5, 7, 8, 9], mes: 10, tipo: 11 };
+  const ETAPAS = { T: "Treinamento", A: "Acompanhamento", F: "Finalizado", P: "A iniciar" };
+  const MES_NOME = { JAN: "Janeiro", FEV: "Fevereiro", MAR: "Março", ABR: "Abril", MAI: "Maio", JUN: "Junho",
+    JUL: "Julho", AGO: "Agosto", SET: "Setembro", OUT: "Outubro", NOV: "Novembro", DEZ: "Dezembro" };
 
   const $ = id => document.getElementById(id);
-  const copia = o => JSON.parse(JSON.stringify(o));
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-  const dataBR = iso => iso.split("-").reverse().join("/");
-  const hojeISO = () => {
-    const d = new Date();
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-  };
+  const dataHora = d => new Date(d).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
 
-  function carregar() {
-    try {
-      const s = localStorage.getItem(CHAVE);
-      if (s) return JSON.parse(s);
-    } catch (e) { /* sem armazenamento: usa os dados originais */ }
-    return copia(ORIGINAL);
-  }
-
-  function gravar(dados) {
-    try {
-      localStorage.setItem(CHAVE, JSON.stringify(dados));
-      return true;
-    } catch (e) {
-      return false;
-    }
-  }
-
-  let salvo = carregar();
-  let estado = copia(salvo);
-  let editando = false;
+  let clientes = [];
 
   function mensagem(texto, erro) {
     $("status").textContent = texto;
     $("status").classList.toggle("erro", !!erro);
+  }
+
+  function parseCSV(texto) {
+    const linhas = [];
+    let linha = [], campo = "", aspas = false;
+    for (let i = 0; i < texto.length; i++) {
+      const ch = texto[i];
+      if (aspas) {
+        if (ch === '"' && texto[i + 1] === '"') { campo += '"'; i++; }
+        else if (ch === '"') aspas = false;
+        else campo += ch;
+      } else if (ch === '"') aspas = true;
+      else if (ch === ",") { linha.push(campo); campo = ""; }
+      else if (ch === "\n" || ch === "\r") {
+        if (ch === "\r" && texto[i + 1] === "\n") i++;
+        linha.push(campo); linhas.push(linha); linha = []; campo = "";
+      } else campo += ch;
+    }
+    if (campo || linha.length) { linha.push(campo); linhas.push(linha); }
+    return linhas;
+  }
+
+  function normalizaItem(v) {
+    const s = v.trim().toUpperCase();
+    return s === "OK" || s === "NU" || s === "ND" ? s : "";
+  }
+
+  function converte(linhas) {
+    const inicio = linhas.findIndex(l => (l[COL.cliente] || "").trim().toLowerCase() === "cliente");
+    if (inicio < 0) throw new Error("Cabeçalho \"Cliente\" não encontrado na coluna B da planilha.");
+    return linhas.slice(inicio + 1)
+      .filter(l => (l[COL.cliente] || "").trim())
+      .map(l => ({
+        etapa: (l[COL.etapa] || "").trim().toUpperCase(),
+        cliente: l[COL.cliente].trim().toUpperCase(),
+        itens: COL.itens.map(i => normalizaItem(l[i] || "")),
+        mes: (l[COL.mes] || "").trim().toUpperCase(),
+        tipo: (l[COL.tipo] || "").trim().toUpperCase(),
+      }));
   }
 
   function calc(c) {
@@ -71,10 +71,9 @@
     : v === "NU" ? '<span class="chip c-nu">NU</span>'
     : v === "ND" ? '<span class="chip c-nd">ND</span>'
     : '<span class="chip c-pend">—</span>';
-  const opts = (lista, atual) => lista.map(([val, rot]) => `<option value="${esc(val)}"${val === atual ? " selected" : ""}>${esc(rot)}</option>`).join("");
   const sep = j => (j === 0 || j === 4 ? "sep" : "");
 
-  function linhaLeitura(c) {
+  function linha(c) {
     const k = calc(c);
     const pct = k.total ? Math.round(100 * k.ok / k.total) : 0;
     const prog = k.total
@@ -83,21 +82,11 @@
     return `<tr><td><span class="etapa" title="${ETAPAS[c.etapa] || "Sem etapa"}">${esc(c.etapa) || "—"}</span></td>`
       + `<td class="cli">${esc(c.cliente)}</td><td>${esc(c.tipo)}</td>`
       + c.itens.map((x, j) => `<td class="${sep(j)}">${chip(x)}</td>`).join("")
-      + `<td class="sep">${esc(MES_NOME[c.mes] || "")}</td><td>${prog}</td></tr>`;
+      + `<td class="sep">${esc(MES_NOME[c.mes] || c.mes)}</td><td>${prog}</td></tr>`;
   }
 
-  function linhaEdicao(c, i) {
-    return `<tr data-i="${i}">`
-      + `<td><select id="etapa-${i}" data-campo="etapa" aria-label="Etapa">${opts([["", "— · Sem etapa"], ...Object.entries(ETAPAS).map(([k, v]) => [k, k + " · " + v])], c.etapa)}</select></td>`
-      + `<td class="cli"><input type="text" class="nome" id="cliente-${i}" data-campo="cliente" value="${esc(c.cliente)}" aria-label="Nome do cliente"></td>`
-      + `<td><select id="tipo-${i}" data-campo="tipo" aria-label="Tipo">${opts(TIPOS.map(t => [t, t]), c.tipo)}</select></td>`
-      + c.itens.map((x, j) => `<td class="${sep(j)}"><select id="item-${i}-${j}" class="v-${x || "pend"}" data-item="${j}" aria-label="${ITENS[j]}">${opts(VALORES, x)}</select></td>`).join("")
-      + `<td class="sep"><select id="mes-${i}" data-campo="mes" aria-label="Mês de finalização">${opts([["", "—"], ...MESES.map(m => [m, MES_NOME[m]])], c.mes)}</select></td>`
-      + `<td><button type="button" class="link-danger" data-remover="${i}">Remover</button></td></tr>`;
-  }
-
-  function renderResumo() {
-    const L = estado.clientes;
+  function render() {
+    const L = clientes;
     const conta = k => L.filter(c => c.etapa === k).length;
     $("stats").innerHTML = [
       [L.length, "clientes"],
@@ -108,6 +97,10 @@
       [L.filter(c => calc(c).pend.length).length, "clientes com pendências"],
     ].map(([n, t]) => `<div class="stat"><b>${n}</b><span>${t}</span></div>`).join("");
 
+    $("linhas").innerHTML = L.length
+      ? L.map(linha).join("")
+      : '<tr><td colspan="12" class="vazio">Nenhum cliente encontrado na planilha.</td></tr>';
+
     $("pendencias").innerHTML = [...L].sort((a, b) => calc(b).pend.length - calc(a).pend.length).map(c => {
       const k = calc(c);
       const corpo = k.pend.length
@@ -115,80 +108,38 @@
         : `<p class="note">${k.total ? "Todos os itens aplicáveis concluídos." : "Não utiliza nenhum dos itens controlados."}</p>`;
       return `<div class="pcard ${k.pend.length ? "" : "done"}"><h3><span>${esc(c.cliente)}</span><span class="etapa">${ETAPAS[c.etapa] || "Sem etapa"}</span></h3>${corpo}</div>`;
     }).join("");
-
-    $("atualizado").textContent = dataBR(estado.atualizadoEm);
   }
 
-  function render() {
-    $("linhas").innerHTML = estado.clientes.map(editando ? linhaEdicao : linhaLeitura).join("");
-    $("col-prog").textContent = editando ? "" : "Progresso";
-    ["btn-add", "btn-cancelar", "btn-salvar"].forEach(id => { $(id).hidden = !editando; });
-    ["btn-editar", "btn-csv", "btn-restaurar"].forEach(id => { $(id).hidden = editando; });
-    renderResumo();
-  }
-
-  $("linhas").addEventListener("change", e => {
-    const tr = e.target.closest("tr[data-i]");
-    if (!tr) return;
-    const c = estado.clientes[+tr.dataset.i];
-    if (e.target.dataset.item !== undefined) {
-      c.itens[+e.target.dataset.item] = e.target.value;
-      e.target.className = "v-" + (e.target.value || "pend");
-    } else if (e.target.dataset.campo === "cliente") {
-      c.cliente = e.target.value.trim().toUpperCase();
-    } else if (e.target.dataset.campo) {
-      c[e.target.dataset.campo] = e.target.value;
+  async function carregar() {
+    $("btn-atualizar").disabled = true;
+    mensagem("Buscando dados da planilha…");
+    try {
+      const r = await fetch(`${URL_CSV}&_=${Date.now()}`, { cache: "no-store" });
+      if (!r.ok) throw new Error(`O Google respondeu com erro ${r.status}.`);
+      const texto = await r.text();
+      if (/^\s*</.test(texto)) throw new Error("A planilha não está compartilhada como \"qualquer pessoa com o link\".");
+      clientes = converte(parseCSV(texto));
+      const agora = Date.now();
+      try { localStorage.setItem(CHAVE_CACHE, JSON.stringify({ em: agora, clientes })); } catch (e) { /* sem cache */ }
+      $("atualizado").textContent = dataHora(agora);
+      mensagem("");
+    } catch (e) {
+      let cache = null;
+      try { cache = JSON.parse(localStorage.getItem(CHAVE_CACHE)); } catch (_) { /* sem cache */ }
+      if (cache && cache.clientes) {
+        clientes = cache.clientes;
+        $("atualizado").textContent = dataHora(cache.em);
+        mensagem(`Não foi possível ler a planilha agora (${e.message}) Mostrando os últimos dados baixados.`, true);
+      } else {
+        mensagem(`Não foi possível ler a planilha: ${e.message}`, true);
+      }
     }
-    renderResumo();
-  });
-
-  $("linhas").addEventListener("click", e => {
-    const b = e.target.closest("button[data-remover]");
-    if (!b) return;
-    estado.clientes.splice(+b.dataset.remover, 1);
     render();
-  });
+    $("btn-atualizar").disabled = false;
+  }
 
-  $("btn-editar").addEventListener("click", () => { editando = true; mensagem(""); render(); });
-
-  $("btn-cancelar").addEventListener("click", () => { estado = copia(salvo); editando = false; mensagem(""); render(); });
-
-  $("btn-add").addEventListener("click", () => {
-    estado.clientes.push({ etapa: "P", cliente: "NOVO CLIENTE", itens: ["", "", "", "", "", "", ""], mes: "", tipo: "IMP" });
-    render();
-    $(`cliente-${estado.clientes.length - 1}`).select();
-  });
-
-  $("btn-salvar").addEventListener("click", () => {
-    if (estado.clientes.some(c => !c.cliente)) return mensagem("Preencha o nome de todos os clientes antes de salvar.", true);
-    estado.atualizadoEm = hojeISO();
-    salvo = copia(estado);
-    editando = false;
-    render();
-    const ok = gravar(salvo);
-    mensagem(ok ? "Salvo neste navegador." : "Este navegador bloqueou o armazenamento. As alterações somem ao fechar a página.", !ok);
-  });
-
-  $("btn-restaurar").addEventListener("click", () => {
-    if (!window.confirm("Descartar todas as edições e voltar aos dados da planilha original?")) return;
-    try { localStorage.removeItem(CHAVE); } catch (e) { /* ignora */ }
-    salvo = copia(ORIGINAL);
-    estado = copia(salvo);
-    render();
-    mensagem("Dados originais restaurados.");
-  });
-
-  $("btn-csv").addEventListener("click", () => {
-    const cab = ["Etapa", "Cliente", ...ITENS, "Mês finalização", "Tipo"];
-    const linhas = estado.clientes.map(c => [c.etapa, c.cliente, ...c.itens, MES_NOME[c.mes] || "", c.tipo]);
-    const csv = [cab, ...linhas].map(l => l.map(v => `"${String(v).replace(/"/g, '""')}"`).join(";")).join("\r\n");
-    const url = URL.createObjectURL(new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8" }));
-    const a = Object.assign(document.createElement("a"), { href: url, download: `status-implantacoes-${hojeISO()}.csv` });
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-  });
-
+  $("link-planilha").href = URL_PLANILHA;
+  $("btn-atualizar").addEventListener("click", carregar);
   render();
+  carregar();
 })();
