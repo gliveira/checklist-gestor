@@ -16,14 +16,28 @@
   const diaCurto = s => `${s.slice(8, 10)}/${s.slice(5, 7)}`;
   const diaLongo = s => `${SEMANA[new Date(s + "T12:00:00").getDay()]} ${diaCurto(s)}`;
 
-  let avaliacoes = carrega();
+  // Guardado como { arquivos, em, avaliacoes }; versões antigas guardavam só a lista.
+  let { avaliacoes, arquivos, em } = carrega();
 
   function carrega() {
-    try { return JSON.parse(localStorage.getItem(CHAVE)) || []; } catch (e) { return []; }
+    try {
+      const d = JSON.parse(localStorage.getItem(CHAVE));
+      if (Array.isArray(d)) return { avaliacoes: d, arquivos: [], em: "" };
+      if (d && Array.isArray(d.avaliacoes)) return d;
+    } catch (e) { /* sem dados guardados */ }
+    return { avaliacoes: [], arquivos: [], em: "" };
   }
 
   function salva() {
-    try { localStorage.setItem(CHAVE, JSON.stringify(avaliacoes)); return true; } catch (e) { return false; }
+    try { localStorage.setItem(CHAVE, JSON.stringify({ arquivos, em, avaliacoes })); return true; } catch (e) { return false; }
+  }
+
+  function mostraCarga() {
+    const el = $("carregada");
+    el.hidden = !avaliacoes.length;
+    if (!avaliacoes.length) return;
+    const quando = em ? new Date(em).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "";
+    el.textContent = `Planilha em uso: ${arquivos.length ? arquivos.join(", ") : "carregada anteriormente"}${quando ? `, anexada em ${quando}` : ""}. Ela fica salva neste navegador até você anexar outra.`;
   }
 
   function mensagem(texto, erro) {
@@ -84,25 +98,29 @@
     return { lidas, desconsideradas };
   }
 
-  async function adiciona(arquivos) {
-    let novas = 0, atualizadas = 0, desc = 0;
-    const porConversa = new Map(avaliacoes.map(a => [a.conversa, a]));
+  // A planilha anexada substitui a anterior. Se vierem várias de uma vez, elas são juntadas pela conversa.
+  async function substitui(lista) {
+    let desc = 0;
+    const porConversa = new Map();
     try {
-      for (const arq of arquivos) {
+      for (const arq of lista) {
         const { lidas, desconsideradas } = converte(await arq.text());
         desc += desconsideradas;
-        for (const a of lidas) {
-          if (porConversa.has(a.conversa)) atualizadas++; else novas++;
-          porConversa.set(a.conversa, a);
-        }
+        for (const a of lidas) porConversa.set(a.conversa, a);
       }
     } catch (e) {
-      mensagem(e.message, true);
+      mensagem(`${e.message} Os dados anteriores foram mantidos.`, true);
+      return;
+    }
+    if (!porConversa.size) {
+      mensagem("A planilha não tem nenhuma avaliação válida. Os dados anteriores foram mantidos.", true);
       return;
     }
     avaliacoes = [...porConversa.values()];
+    arquivos = lista.map(a => a.name);
+    em = new Date().toISOString();
     const ok = salva();
-    let texto = `${int(novas)} avaliações novas, ${int(atualizadas)} já estavam no painel`;
+    let texto = `Dados atualizados: ${int(avaliacoes.length)} avaliações`;
     if (desc) texto += `, ${int(desc)} desconsideradas ficaram de fora`;
     texto += ok ? "." : ". Não foi possível guardar no navegador; os dados somem ao fechar a página.";
     mensagem(texto, !ok);
@@ -142,6 +160,8 @@
 
   function desenha() {
     const tem = avaliacoes.length > 0;
+    mostraCarga();
+    $("btn-arquivo").textContent = tem ? "Anexar planilha nova" : "Anexar planilha";
     $("painel").hidden = !tem;
     $("btn-limpar").hidden = !tem;
     $("mes").parentElement.hidden = !tem;
@@ -319,18 +339,18 @@
     $("btn-cancelar").hidden = !sim;
   }
 
-  $("arquivo").addEventListener("change", e => { if (e.target.files.length) adiciona([...e.target.files]); e.target.value = ""; });
+  $("arquivo").addEventListener("change", e => { if (e.target.files.length) substitui([...e.target.files]); e.target.value = ""; });
   const drop = $("drop");
   ["dragenter", "dragover"].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.add("ativo"); }));
   ["dragleave", "drop"].forEach(t => drop.addEventListener(t, () => drop.classList.remove("ativo")));
-  drop.addEventListener("drop", e => { e.preventDefault(); if (e.dataTransfer.files.length) adiciona([...e.dataTransfer.files]); });
+  drop.addEventListener("drop", e => { e.preventDefault(); if (e.dataTransfer.files.length) substitui([...e.dataTransfer.files]); });
   $("mes").addEventListener("change", desenha);
   $("operador").addEventListener("change", desenha);
   $("busca").addEventListener("input", desenhaTodas);
   $("btn-limpar").addEventListener("click", () => confirmando(true));
   $("btn-cancelar").addEventListener("click", () => confirmando(false));
   $("btn-confirmar").addEventListener("click", () => {
-    avaliacoes = [];
+    avaliacoes = []; arquivos = []; em = "";
     try { localStorage.removeItem(CHAVE); } catch (e) { /* nada guardado */ }
     confirmando(false);
     montaFiltros(false);

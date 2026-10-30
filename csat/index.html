@@ -13,13 +13,13 @@
     <header>
       <div class="eyebrow">Satisfação no atendimento · <span id="periodo">sem dados carregados</span></div>
       <h1>CSAT do suporte</h1>
-      <p id="resumo">Adicione a planilha de CSAT exportada do Conversas para ver os resultados.</p>
+      <p id="resumo">Anexe a planilha de CSAT exportada do Conversas para ver os resultados.</p>
     </header>
 
     <section class="carga" id="carga">
       <div class="sec-head">
         <div class="actions">
-          <label class="btn primary" for="arquivo">Adicionar planilha</label>
+          <label class="btn primary" for="arquivo" id="btn-arquivo">Anexar planilha</label>
           <input type="file" id="arquivo" accept=".csv,text/csv" multiple hidden>
           <label class="filtro" for="mes">Período
             <select id="mes"></select>
@@ -35,8 +35,9 @@
           <button type="button" id="btn-cancelar" hidden>Cancelar</button>
         </div>
       </div>
+      <p class="carregada" id="carregada" hidden></p>
       <div class="drop" id="drop">
-        Arraste aqui o arquivo <code>csat-report-*.csv</code> do Conversas (Relatórios › CSAT › Baixar). Pode adicionar várias planilhas: avaliações repetidas são juntadas pela conversa.
+        Arraste aqui o arquivo <code>csat-report-*.csv</code> do Conversas (Relatórios › CSAT › Baixar). A planilha nova substitui a anterior, então exporte sempre o período completo que quer acompanhar.
       </div>
     </section>
 
@@ -101,7 +102,7 @@
       </section>
     </div>
 
-    <p class="note">As planilhas são lidas aqui no seu navegador e ficam guardadas só nele: nada é enviado para o site. Telefones e e-mails dos contatos são descartados na leitura, e avaliações marcadas como desconsideradas no Conversas ficam fora da conta. Em outro computador ou navegador, adicione as planilhas de novo.</p>
+    <p class="note">As planilhas são lidas aqui no seu navegador e ficam guardadas só nele: nada é enviado para o site. Telefones e e-mails dos contatos são descartados na leitura, e avaliações marcadas como desconsideradas no Conversas ficam fora da conta. Em outro computador ou navegador, anexe a planilha de novo.</p>
   </div>
 
   <div class="tip" id="tip" hidden></div>

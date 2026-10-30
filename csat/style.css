@@ -49,6 +49,7 @@ input[type="search"] { width: min(100%, 260px); }
 .status { font-size: .85rem; color: var(--muted); }
 .status.erro { color: var(--danger); }
 
+.carregada { margin: 0; font-size: .85rem; color: var(--fg); background: var(--accent-bg); border-radius: 6px; padding: 8px 12px; }
 .drop { border: 1.5px dashed var(--line); border-radius: 8px; padding: 14px 16px; color: var(--muted); font-size: .88rem; background: var(--surface); }
 .drop.ativo { border-color: var(--accent); background: var(--accent-bg); color: var(--fg); }
 .drop code { font-family: var(--font-mono); font-size: .8rem; }
