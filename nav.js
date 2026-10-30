@@ -4,6 +4,7 @@
   const TELAS = [
     { titulo: "Checklist do gestor", caminho: "" },
     { titulo: "Status das implantações", caminho: "status-implantacoes/" },
+    { titulo: "CSAT do suporte", caminho: "csat/" },
   ];
 
   const base = new URL(".", document.currentScript.src);

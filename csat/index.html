@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CSAT do Suporte Eduq</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@500&display=swap">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="eyebrow">Satisfação no atendimento · <span id="periodo">sem dados carregados</span></div>
+      <h1>CSAT do suporte</h1>
+      <p id="resumo">Adicione a planilha de CSAT exportada do Conversas para ver os resultados.</p>
+    </header>
+
+    <section class="carga" id="carga">
+      <div class="sec-head">
+        <div class="actions">
+          <label class="btn primary" for="arquivo">Adicionar planilha</label>
+          <input type="file" id="arquivo" accept=".csv,text/csv" multiple hidden>
+          <label class="filtro" for="mes">Período
+            <select id="mes"></select>
+          </label>
+          <label class="filtro" for="operador">Operador
+            <select id="operador"></select>
+          </label>
+        </div>
+        <div class="actions">
+          <span class="status" id="status" role="status"></span>
+          <button type="button" class="link-danger" id="btn-limpar">Apagar dados</button>
+          <button type="button" class="link-danger" id="btn-confirmar" hidden>Confirmar: apagar todas as avaliações</button>
+          <button type="button" id="btn-cancelar" hidden>Cancelar</button>
+        </div>
+      </div>
+      <div class="drop" id="drop">
+        Arraste aqui o arquivo <code>csat-report-*.csv</code> do Conversas (Relatórios › CSAT › Baixar). Pode adicionar várias planilhas: avaliações repetidas são juntadas pela conversa.
+      </div>
+    </section>
+
+    <div id="painel" hidden>
+      <div class="stats">
+        <div class="stat destaque"><b id="k-csat">—</b><span>CSAT (notas 4 e 5)</span></div>
+        <div class="stat"><b id="k-media">—</b><span>Nota média (1 a 5)</span></div>
+        <div class="stat"><b id="k-nota5">—</b><span>Notas 5 ("Uau!")</span></div>
+        <div class="stat"><b id="k-total">—</b><span>Avaliações</span></div>
+        <div class="stat"><b id="k-baixas">—</b><span>Notas 3 ou menores</span></div>
+      </div>
+
+      <div class="grid2">
+        <section class="card">
+          <h2>Distribuição das notas</h2>
+          <p class="nota">Quantas avaliações cada nota recebeu no período.</p>
+          <div id="dist" class="dist"></div>
+        </section>
+        <section class="card">
+          <h2>Avaliações por dia</h2>
+          <p class="nota">Passe o mouse sobre um dia para ver a média e o CSAT.</p>
+          <div id="dias" class="chart"></div>
+        </section>
+      </div>
+
+      <section class="card">
+        <h2>Resultado por operador</h2>
+        <p class="nota">Ordenado pelo número de avaliações. CSAT é a parcela de notas 4 e 5.</p>
+        <div class="scroll">
+          <table>
+            <thead><tr><th class="esq">Operador</th><th>Avaliações</th><th>Média</th><th>CSAT</th><th class="larga">Notas 5</th><th class="larga">Notas ≤ 3</th></tr></thead>
+            <tbody id="ops"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Notas 3 ou menores</h2>
+        <p class="nota">Conversas para revisar com o operador. O número abre a conversa no Conversas.</p>
+        <div class="scroll">
+          <table>
+            <thead><tr><th class="esq">Conversa</th><th class="esq">Data</th><th class="esq">Operador</th><th class="esq">Contato</th><th>Nota</th></tr></thead>
+            <tbody id="baixas"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="sec-head">
+          <div>
+            <h2>Todas as avaliações</h2>
+            <p class="nota">Mais recentes primeiro.</p>
+          </div>
+          <input type="search" id="busca" placeholder="Buscar operador ou contato" aria-label="Buscar avaliações">
+        </div>
+        <div class="scroll alta">
+          <table>
+            <thead><tr><th class="esq">Conversa</th><th class="esq">Data</th><th class="esq">Operador</th><th class="esq">Contato</th><th>Nota</th></tr></thead>
+            <tbody id="todas"></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <p class="note">As planilhas são lidas aqui no seu navegador e ficam guardadas só nele: nada é enviado para o site. Telefones e e-mails dos contatos são descartados na leitura, e avaliações marcadas como desconsideradas no Conversas ficam fora da conta. Em outro computador ou navegador, adicione as planilhas de novo.</p>
+  </div>
+
+  <div class="tip" id="tip" hidden></div>
+  <script src="../nav.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
